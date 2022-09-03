@@ -1,0 +1,55 @@
+sistema de gestao escolar
+PYEDU
+
+tabelas
+ALUNO -
+	* NOME
+	* NOME_RESP
+	* CELULAR
+	* CPF
+	* DATA_NASC
+
+	** ID_TURMA
+	** HORA
+	** 
+
+PROFESSOR -
+	* NOME
+	* CELULAR
+	* DATA_NASC
+
+NOTAS -
+	* ID_ALUNO
+	* ANO
+	* SEMESTRE
+	** MAT
+	** PORT
+	** HIST
+	** SITUACAO
+TURMA - 
+	* ANO
+	* SEQ
+
+
+
+NOME SOBRENOME
+data de nascimento
+cpf
+rg
+cor / raca
+sexo
+nacionalidade
+serie
+
+historia
+matematica
+portugues
+ciencias
+sociologia
+educao fisica
+artes
+
+// IMPLEMENTACOES
+* barra de busca( por nome, cpf / turma)
+
+// BUGS E FALHAS

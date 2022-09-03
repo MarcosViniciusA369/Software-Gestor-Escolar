@@ -1,0 +1,30 @@
+<RCC>
+  <qresource prefix="lupa">
+    <file>pesquisa.png</file>
+  </qresource>
+  <qresource prefix="logo3">
+    <file>GESTOR ESCOLAR PYEDU.png</file>
+  </qresource>
+  <qresource prefix="logo2">
+    <file>PYEDU (4).png</file>
+  </qresource>
+  <qresource prefix="logo">
+    <file>PYEDU__3_-removebg-preview.png</file>
+  </qresource>
+  <qresource prefix="sair">
+    <file>icons8-sair-50.png</file>
+  </qresource>
+  <qresource prefix="cad">
+    <file>icons8-documentos-100.png</file>
+  </qresource>
+  <qresource prefix="prof">
+    <file>icons8-professor-100.png</file>
+  </qresource>
+  <qresource prefix="home">
+    <file>icons8-monitor-100.png</file>
+  </qresource>
+  <qresource prefix="alunos">
+    <file>icons8-estudantes-100.png</file>
+  </qresource>
+  <qresource prefix="cad"/>
+</RCC>

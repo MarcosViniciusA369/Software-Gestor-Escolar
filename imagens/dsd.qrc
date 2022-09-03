@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="img">
+    <file>icons8-inscrição-de-estudante-90.png</file>
+    <file>icons8-marcador-100.png</file>
+    <file>icons8-documentos-100.png</file>
+    <file>icons8-monitor-100.png</file>
+    <file>icons8-suporte-ao-cliente-100.png</file>
+  </qresource>
+</RCC>
