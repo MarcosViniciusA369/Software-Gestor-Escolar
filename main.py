@@ -12,13 +12,16 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         super(App, self).__init__(parent)
         super().setupUi(self)
 
+        self.bd = sqlite3.connect('banco_dados/Pyedu_bd.db')
+        self.cursor = self.bd.cursor()
+
         timer = QTimer(self)
-        timer.timeout.connect(self.relojo)
+        timer.timeout.connect(self.clock)
         timer.start(1000)
 
-        self.some = False
+        self.show_bar = True
         self.dt_key = QShortcut(QKeySequence('esc'), self)
-        self.dt_key.activated.connect(self.menu_esconde)
+        self.dt_key.activated.connect(self.menubar_show)
 
         ######################### BOTOES MENU LATERAL ###########################
         self.pushButton_1.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(0))  # HOME
@@ -26,37 +29,37 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.pushButton_3.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(3))  # CAD ALUN
         self.pushButton_11.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(2))  # CAD PROF
         self.pushButton_13.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(6))
-        self.pushButton_12.clicked.connect(self.fechar_app)  # SAIR
+        self.pushButton_12.clicked.connect(self.close_app)  # SAIR
         # self.pushButton_13.clicked.connect(lambda: self.stackedWidget.setCurrentIndex())  # CAD NOTAS
 
         ######################### BOTOES DA PESQUISA ###########################
-        self.pushButton.clicked.connect(self.btn_ser)
-        self.pushButton_14.clicked.connect(lambda: self.atualizar_banco(self.tabela_geral))  # atualiza o banco
-        self.pushButton_4.clicked.connect(self.btn3_cad)  # cad
+        self.pushButton.clicked.connect(self.btn_one_person)
+        self.pushButton_14.clicked.connect(lambda: self.update_database(self.tabela_geral))  # atualiza o banco
+        self.pushButton_4.clicked.connect(self.btn3_reg)  # cad
         self.pushButton_5.clicked.connect(self.btn4_alt)
         self.pushButton_6.clicked.connect(self.btn6_dlt)
 
         ######################### BOTOES PARA CADASTRAR PROFESSOR #######################
-        self.pushButton_9.clicked.connect(self.cadastrar_prof)
+        self.pushButton_9.clicked.connect(self.register_teacher)
 
         ######################### BOTOES PARA CADASTRAR ALUNO ###########################
-        self.pushButton_7.clicked.connect(self.cadastrar_aluno)
-        self.pushButton_15.clicked.connect(self.btn15_cad)
+        self.pushButton_7.clicked.connect(self.register_student)
+        self.pushButton_15.clicked.connect(self.btn15_reg)
         self.pushButton_16.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
 
         ######################### BUTTON FOR ALTERAR ###########################
         self.pushButton_21.clicked.connect(self.btn21_alt)
         self.pushButton_20.clicked.connect(self.btn20_alt)
-        self.pushButton_22.clicked.connect(self.alterar_cadastro)
+        self.pushButton_22.clicked.connect(self.alter_register)
 
         ######################### BOTOES MATERIA ###########################
-        self.pushButton_29.clicked.connect(self.cad_mat)
+        self.pushButton_29.clicked.connect(self.reg_sub)
         self.pushButton_31.clicked.connect(lambda :self.stackedWidget.setCurrentIndex(1))
-        self.pushButton_30.clicked.connect(self.alt_mat)
+        self.pushButton_30.clicked.connect(self.alt_sub)
 
         ######################### BOTOES DELETAR ###########################
-        self.pushButton_17.clicked.connect(self.deleta_registro)
-        self.pushButton_19.clicked.connect(lambda: self.atualizar_banco(self.tabela_deletar))
+        self.pushButton_17.clicked.connect(self.delete_registry)
+        self.pushButton_19.clicked.connect(lambda: self.update_database(self.tabela_deletar))
         self.pushButton_18.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
 
         ######################### COMBOX ###########################
@@ -89,18 +92,18 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.label_10.hide()
         self.label_11.hide()
 
-    def menu_esconde(self):
-        if self.some:
+    def menubar_show(self):
+        if self.show_bar:
             self.menu_bar.show()
-            self.some = False
+            self.show_bar = False
         else:
             self.menu_bar.hide()
-            self.some = True
+            self.show_bar = True
 
-    def relojo(self):
+    def clock(self):
         now = QTime.currentTime()
-        label_hora = now.toString('hh:mm:ss')
-        self.label_7.setText(label_hora)
+        label_time = now.toString('hh:mm:ss')
+        self.label_7.setText(label_time)
 
         data_atual = date.today()
         h = '{}/{}/{}'.format(data_atual.day, data_atual.month,
@@ -109,29 +112,27 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
 
         ######################### FUNCOES DOS BTNS ###########################
 
-    def btn_ser(self):
-        self.procura = self.textEdit.toPlainText()
-        self.pro_dif = self.comboBox_3.currentText()
+    def btn_one_person(self):
+        self.search_text = self.textEdit.toPlainText()
+        self.combox_select = self.comboBox_3.currentText()
         self.usu = self.comboBox.currentText()
 
-        if self.procura == '':
+        if self.search_text == '':
             QtWidgets.QMessageBox.about(self.p2, 'AVISO', 'NENHUM VALOR FOI INSERIDO NA BARRA DE PESQUISA')
             return
 
-        if self.pro_dif == 'ID':
+        if self.combox_select == 'ID':
             try:
-                self.bd = sqlite3.connect('banco_dados/edu.db')
+                self.cursor = self.bd.cursor()
+                act = 'SELECT * FROM student WHERE RA= ?'
+                self.cursor.execute(act, (self.search_text,))
+                self.bd.commit()
+                self.update_person(self.tabela_geral)
+
             except Exception as error:
                 print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-            else:
-                self.cursor = self.bd.cursor()
-                acao = 'SELECT * FROM Aluno WHERE RA= ?'
-                self.cursor.execute(acao, (self.procura,))
-                self.bd.commit()
 
-                self.atualiza_pessoa(self.tabela_geral)
-
-    def btn3_cad(self):
+    def btn3_reg(self):
         if self.comboBox.currentText() == 'Alunos':
             self.stack = self.stackedWidget.setCurrentIndex(3)
             self.pushButton_8.hide()
@@ -157,16 +158,16 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         if self.comboBox.currentText() == 'Alunos':
             self.label_6.setText('ALTERAR ALUNO')
             self.stack = self.stackedWidget.setCurrentIndex(4)
-            self.atualizar_banco(self.tabela_alterar)
+            self.update_database(self.tabela_alterar)
 
         elif self.comboBox.currentText() == 'Professor':
             self.label_6.setText('ALTERAR PROFESSOR')
             self.stack = self.stackedWidget.setCurrentIndex(4)
-            self.atualizar_banco(self.tabela_alterar)
+            self.update_database(self.tabela_alterar)
 
         elif self.comboBox.currentText() == 'Materias':
             self.stack = self.stackedWidget.setCurrentIndex(8)
-            self.atualizar_banco(self.tabela_materia)
+            self.update_database(self.tabela_materia)
             self.lineEdit_15.show()
             self.lineEdit_24.hide()
             self.lineEdit_25.hide()
@@ -177,10 +178,10 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
 
     def btn6_dlt(self):
         self.stack = self.stackedWidget.setCurrentIndex(5)
-        self.atualizar_banco(self.tabela_deletar)
+        self.update_database(self.tabela_deletar)
 
-    def btn15_cad(self):
-        self.atualizar_banco(self.tabela_geral)
+    def btn15_reg(self):
+        self.update_database(self.tabela_geral)
         self.stackedWidget.setCurrentIndex(1)
 
     def btn20_alt(self):
@@ -200,17 +201,15 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             QtWidgets.QMessageBox.about(self.p_2_alt, 'AVISO', 'INSIRA UM ID')
             return
 
-        id_alterar = self.lineEdit_14.text()
-        self.bd = sqlite3.connect('banco_dados/edu.db')
-        self.cursor = self.bd.cursor()
+        id_alter = self.lineEdit_14.text()
 
         if self.comboBox.currentText() == 'Alunos':
-            self.cursor.execute("SELECT RA FROM Aluno")
-            self.dados_3 = self.cursor.fetchall()
-            lista_vazia = []
-            for i in self.dados_3:
-                lista_vazia.append(i)
-            if id_alterar not in str(lista_vazia):
+            self.cursor.execute("SELECT RA FROM student")
+            self.data_3 = self.cursor.fetchall()
+            empty_list = []
+            for i in self.data_3:
+                empty_list.append(i)
+            if id_alter not in str(empty_list):
                 QtWidgets.QMessageBox.about(self.p_2_alt, 'AVISO', 'ID NÃO ENCONTRADO')
                 return
             try:
@@ -223,27 +222,27 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 self.pushButton_22.show()
                 self.pushButton_21.hide()
 
-                self.cursor.execute("SELECT * FROM Aluno WHERE RA = ?", (id_alterar,))
-                self.dados_3 = self.cursor.fetchall()
+                self.cursor.execute("SELECT * FROM student WHERE RA = ?", (id_alter,))
+                self.data_3 = self.cursor.fetchall()
 
-                for i in self.dados_3:
+                for i in self.data_3:
                     self.lineEdit_9.setText(f'{i[1]}')
                     self.lineEdit_11.setText(f'{i[2]}')
                     self.lineEdit_13.setText(f'{i[4]}')
                     # self.lineEdit_12.setText(f'{i[4]}')
-                    conver_data = datetime.strptime(i[5], '%d/%m/%Y').date()
-                    self.dateEdit_3.setDate(conver_data)
+                    conver_date = datetime.strptime(i[5], '%d/%m/%Y').date()
+                    self.dateEdit_3.setDate(conver_date)
                     self.lineEdit_10.setText(f'{i[3]}')
             except Exception as error:
                 print(f'Error: {error}')
 
         if self.comboBox.currentText() == 'Professor':
-            self.cursor.execute("SELECT id FROM Professor")
-            self.dados_3 = self.cursor.fetchall()
-            lista_vazia = []
-            for i in self.dados_3:
-                lista_vazia.append(i)
-            if id_alterar not in str(lista_vazia):
+            self.cursor.execute("SELECT id FROM teacher")
+            self.data_3 = self.cursor.fetchall()
+            empty_list = []
+            for i in self.data_3:
+                empty_list.append(i)
+            if id_alter not in str(empty_list):
                 QtWidgets.QMessageBox.about(self.p_2_alt, 'AVISO', 'ID NÃO ENCONTRADO')
                 return
             try:
@@ -256,15 +255,15 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 self.pushButton_22.show()
                 self.pushButton_21.hide()
 
-                self.cursor.execute("SELECT * FROM Professor WHERE id = ?", (id_alterar,))
-                self.dados_3 = self.cursor.fetchall()
+                self.cursor.execute("SELECT * FROM teacher WHERE id = ?", (id_alter,))
+                self.data_3 = self.cursor.fetchall()
 
-                for i in self.dados_3:
+                for i in self.data_3:
                     self.lineEdit_9.setText(f'{i[1]}')
                     self.lineEdit_10.setText(f'{i[2]}')
                     self.lineEdit_13.setText(f'{i[3]}')
-                    conver_data = datetime.strptime(i[5], '%d/%m/%Y').date()
-                    self.dateEdit_3.setDate(conver_data)
+                    conver_date = datetime.strptime(i[5], '%d/%m/%Y').date()
+                    self.dateEdit_3.setDate(conver_date)
             except Exception as error:
                 print(f'Error: {error}')
 
@@ -278,30 +277,31 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.pushButton_22.hide()
         self.pushButton_21.show()
 
-    def fechar_app(self):
+    def close_app(self):
         sys.exit()
 
     ######################### BANCO DE DADOS ###########################
 
     ######## CADASTRAR ALUNO #########
-    def cadastrar_aluno(self):
+    def register_student(self):
         numeros = '1234567890'
         caracter_s = '!@#$%¨&*()_-+=[]{}'
         lista_nome_vazia = []
         # CONFERINDO NOME E SOBRENOME
         try:
-            self.nome = self.lineEdit.text().strip() + ' ' + self.lineEdit_2.text().strip()
+            self.name = self.lineEdit.text().strip() + ' ' + self.lineEdit_2.text().strip()
             self.resp = self.lineEdit_5.text().strip()
-            self.cel = self.lineEdit_3.text().strip()
-            self.data = self.dateEdit.text()
+            self.phone = self.lineEdit_3.text().strip()
+            self.date = self.dateEdit.text()
             self.cpf = self.lineEdit_4.text()
+            self.year = self.comboBox_2.currentText()
 
-            if self.nome == '' or self.resp == '' or self.cpf == '':
+            if self.name == '' or self.resp == '' or self.cpf == '':
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', 'Existe campos vazios')
                 return
 
             # VERIFICANDO NOME
-            for a in self.nome:
+            for a in self.name:
                 lista_nome_vazia.append(a)
             for a in lista_nome_vazia:
                 if a in numeros:
@@ -322,7 +322,7 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     print(f'{a} é caracter special')
                     return
 
-            # VEREFICAR O CPF
+            '''# VEREFICAR O CPF
             cpf = str(self.cpf)
             if len(cpf) < 11:
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', 'cpf inserido incorretamente')
@@ -336,23 +336,23 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
 
             if ok == False:
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', 'cpf invalido')
-                return
+                return'''
 
         except:
             print('error')
 
         # enviando os dados
         try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
-        except Exception as error:
-            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
             self.cursor = self.bd.cursor()
-            acao = 'INSERT INTO Aluno (nome, nome_resp, cpf, celular, data_nasc) VALUES (?,?,?,?,?)'
-            self.cursor.execute(acao, (self.nome.upper(), self.resp.upper(), self.cpf, self.cel, self.data))
+            acao = 'INSERT INTO student (name, name_resp, cpf, phone_number, birth_date, year) VALUES (?,?,?,?,?,?)'
+            self.cursor.execute(acao, (self.name.upper(), self.resp.upper(), self.cpf, self.phone, self.date, self.year[0]))
             self.bd.commit()
             QtWidgets.QMessageBox.about(self.p_2_cad, 'CADASTRADO', 'CADASTRADO COM SUCESSO')
 
+        except Exception as error:
+            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
+
+        else:
             self.lineEdit.setText('')
             self.lineEdit_2.setText('')
             self.lineEdit_5.setText('')
@@ -360,27 +360,30 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             self.lineEdit_4.setText('')
 
     ######## CADASTRAR PROFESSOR #########
-    def cadastrar_prof(self):
-        numeros = '1234567890'
-        caracter_s = '!@#$%¨&*()_-+=[]{}'
-        lista_nome_vazia = []
+    def register_teacher(self):
+        num = '1234567890'
+        caracter = '!@#$%¨&*()_-+=[]{}'
+        empty_list = []
 
-        self.nome = self.lineEdit_6.text().strip()
-        self.cel = self.lineEdit_7.text().strip()
-        self.data = self.dateEdit_2.text()
+        self.name = self.lineEdit_6.text().strip()
+        self.cpf = self.lineEdit_7.text()
+        self.phone = self.lineEdit_26.text().strip()
+        self.date = self.dateEdit_2.text()
+        print(self.date)
 
-        if self.nome == '' or self.cel == '':
+
+        if self.name == '' or self.phone == '':
             QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', 'Existe campos vazios')
             return
 
         # VERIFICANDO NOME DO PROFESSOR
-        for a in self.nome:
-            lista_nome_vazia.append(a)
-        for a in lista_nome_vazia:
-            if a in numeros:
+        for a in self.name:
+            empty_list.append(a)
+        for a in empty_list:
+            if a in num:
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', f'VALOR INCORRETO EM NOME: {a}')
                 return
-            elif a in caracter_s:
+            elif a in caracter:
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', f'VALOR INCORRETO EM NOME: {a}')
                 return
 
@@ -389,64 +392,56 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'AVISO', 'NUMERO INVALIDO')
                 return'''
         try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
-        except Exception as error:
-            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
             self.cursor = self.bd.cursor()
-            acao = 'INSERT INTO Professor (nome, celular, data_nasc) VALUES (?,?,?)'
-            self.cursor.execute(acao, (self.nome, self.cel, self.data))
+            act = 'INSERT INTO teacher (name, cpf, phone_number, birth_date) VALUES (?,?,?,?)'
+            self.cursor.execute(act, (self.name, self.cpf, self.phone, self.date))
             self.bd.commit()
             QtWidgets.QMessageBox.about(self.p_2_cad, 'CADASTRADO', 'PROFESSOR CADASTRADO')
 
             self.lineEdit_6.setText('')
             self.lineEdit_7.setText('')
+        except Exception as error:
+            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
 
     ######## CADASTRAR MAT #########
-    def cad_mat(self):
-        numeros = "1234567890"
-        self.nome_mat = self.lineEdit_24.text()
-        self.nome_prof = self.lineEdit_25.text()
+    def reg_sub(self):
+        num = "1234567890"
+        self.name_sub = self.lineEdit_24.text()
+        self.name_teac = self.lineEdit_25.text()
 
-        if self.nome_mat == '':
+        if self.name_sub == '':
             QMessageBox.about(self.p5_mat, "AVISO", "INSIRA UM NOME")
             return
-        if self.nome_prof not in numeros:
+        if self.name_teac not in num:
             QMessageBox.about(self.p5_mat, "AVISO", "APENAS NUMEROS NO ID PROFESSOR")
             return
 
         try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
-        except Exception as error:
-            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
             self.cursor = self.bd.cursor()
-            acao = 'INSERT INTO Materia (nome, prof_materia) VALUES (?,?)'
-            self.cursor.execute(acao, (self.nome_mat.upper(), self.nome_prof))
+            act = 'INSERT INTO subjects (name, id_teacher) VALUES (?,?)'
+            self.cursor.execute(act, (self.name_sub.upper(), self.name_teac))
             self.bd.commit()
             QtWidgets.QMessageBox.about(self.p_2_cad, 'CADASTRADO', 'CADASTRADO COM SUCESSO')
+        except Exception as error:
+            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
 
-    def alt_mat(self):
+    def alt_sub(self):
         pass
 
     ######## ALTERAR BANCO #########
-    def alterar_cadastro(self):
-        self.nome = self.lineEdit_9.text()
+    def alter_register(self):
+        self.name = self.lineEdit_9.text()
         self.resp = self.lineEdit_11.text()
-        self.cel = self.lineEdit_13.text()
-        self.data = self.dateEdit_3.text()
+        self.phone = self.lineEdit_13.text()
+        self.date = self.dateEdit_3.text()
         self.cpf = self.lineEdit_10.text()
 
         try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
-        except Exception as error:
-            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
             if self.comboBox.currentText() == 'Alunos':
                 self.cursor = self.bd.cursor()
-                acao = 'UPDATE Aluno SET nome = ?, nome_resp = ?, cpf = ?, celular = ?, data_nasc = ? WHERE RA = ?'
-                self.cursor.execute(acao, (
-                    self.nome.upper(), self.resp.upper(), self.cpf, self.cel, self.data, self.lineEdit_14.text()))
+                act = 'UPDATE student SET name = ?, name_resp = ?, cpf = ?, phone_number = ?, birth_date = ? WHERE RA = ?'
+                self.cursor.execute(act, (
+                    self.name.upper(), self.resp.upper(), self.cpf, self.phone, self.date, self.lineEdit_14.text()))
                 self.bd.commit()
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
 
@@ -454,12 +449,14 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 self.lineEdit_11.hide()
 
                 self.cursor = self.bd.cursor()
-                acao = 'UPDATE Professor SET nome = ?, cpf = ?, celular = ?, data_nasc = ? WHERE id = ?'
-                self.cursor.execute(acao, (
-                    self.nome.upper(), self.cpf, self.cel, self.data, self.lineEdit_14.text()))
+                act = 'UPDATE teacher SET name = ?, cpf = ?, phone_number = ?, birth_date = ? WHERE id = ?'
+                self.cursor.execute(act, (
+                    self.name.upper(), self.cpf, self.phone, self.date, self.lineEdit_14.text()))
                 self.bd.commit()
                 QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
-
+        except Exception as error:
+            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
+        else:
             self.lineEdit_9.setText('')
             self.lineEdit_11.setText('')
             self.lineEdit_13.setText('')
@@ -467,125 +464,117 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             self.lineEdit_10.setText('')
             self.lineEdit_14.setText('')
 
-            self.atualizar_banco(self.tabela_alterar)
+            self.update_database(self.tabela_alterar)
 
     ######## ATUALIZAR BANCO #########
-    def atualizar_banco(self, tabela):
-        self.nome_tabela = tabela
+    def update_database(self, table):
+        self.name_table = table
 
         try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
-        except Exception as error:
-            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
             ######## ALUNOS #########
             if self.comboBox.currentText() == 'Alunos':
                 # chamamos o banco de dados e pedimos um SELECT
                 self.cursor = self.bd.cursor()
-                self.cursor.execute('SELECT * FROM aluno')
-                self.dados = self.cursor.fetchall()
+                self.cursor.execute('SELECT * FROM student')
+                self.data = self.cursor.fetchall()
 
                 # Duas listas para definir nomes na coluna e nas linhas
-                nomes = ['ID', 'NOME', 'RESPONSAVEL', 'CPF', 'CELULAR', 'DATA DE NASC.']
-                lista_vazia = []
-                for x in range(0, len(self.dados)):
-                    lista_vazia.append(' ')
+                name_colum = ['ID', 'NOME', 'RESPONSAVEL', 'CPF', 'CELULAR', 'DATA DE NASC.', 'ANO LETIVO']
+                empty_list = []
+                for x in range(0, len(self.data)):
+                    empty_list.append(' ')
 
                 # Alteração nas colunas
-                self.nome_tabela.setRowCount(len(self.dados))
-                self.nome_tabela.setColumnCount(6)
-                self.nome_tabela.setColumnWidth(0, 15)
-                self.nome_tabela.setColumnWidth(1, 200)
-                self.nome_tabela.setColumnWidth(2, 150)
-                self.nome_tabela.setColumnWidth(3, 100)
-                self.nome_tabela.setColumnWidth(4, 100)
-                self.nome_tabela.setVerticalHeaderLabels(lista_vazia)
-                self.nome_tabela.setHorizontalHeaderLabels(nomes)
+                self.name_table.setRowCount(len(self.data))
+                self.name_table.setColumnCount(7)
+                self.name_table.setColumnWidth(0, 15)
+                self.name_table.setColumnWidth(1, 170)
+                self.name_table.setColumnWidth(2, 150)
+                self.name_table.setColumnWidth(3, 100)
+                self.name_table.setColumnWidth(4, 80)
+                self.name_table.setVerticalHeaderLabels(empty_list)
+                self.name_table.setHorizontalHeaderLabels(name_colum)
 
                 # Adicinamos Items na coluna
-                for l in range(0, len(self.dados)):
-                    for c in range(0, 6):
-                        self.nome_tabela.setItem(l, c, QTableWidgetItem(str(self.dados[l][c])))
+                for l in range(0, len(self.data)):
+                    for c in range(0, 7):
+                        self.name_table.setItem(l, c, QTableWidgetItem(str(self.data[l][c])))
 
             ######## PROFESSORES #########
             elif self.comboBox.currentText() == 'Professor':
-                self.cursor = self.bd.cursor()
-                self.cursor.execute('SELECT * FROM Professor')
-                self.dados = self.cursor.fetchall()
+                self.cursor.execute('SELECT * FROM teacher')
+                self.data = self.cursor.fetchall()
 
-                nomes = ['ID', 'NOME', 'CPF', 'CELULAR', 'DATA NASC']
-                lista_vazia = []
-                for x in range(0, len(self.dados)):
-                    lista_vazia.append(' ')
+                name_colum = ['ID', 'NOME', 'CPF', 'CELULAR', 'DATA NASC']
+                empty_list = []
+                for x in range(0, len(self.data)):
+                    empty_list.append(' ')
 
-                self.nome_tabela.setRowCount(len(self.dados))
-                self.nome_tabela.setColumnCount(5)
-                self.nome_tabela.setColumnWidth(0, 15)
-                self.nome_tabela.setColumnWidth(1, 200)
-                self.nome_tabela.setColumnWidth(3, 115)
-                self.nome_tabela.setVerticalHeaderLabels(lista_vazia)
-                self.nome_tabela.setHorizontalHeaderLabels(nomes)
+                self.name_table.setRowCount(len(self.data))
+                self.name_table.setColumnCount(5)
+                self.name_table.setColumnWidth(0, 15)
+                self.name_table.setColumnWidth(1, 200)
+                self.name_table.setColumnWidth(3, 115)
+                self.name_table.setVerticalHeaderLabels(empty_list)
+                self.name_table.setHorizontalHeaderLabels(name_colum)
 
-                for l in range(0, len(self.dados)):
+                for l in range(0, len(self.data)):
                     for c in range(0, 4):
-                        self.nome_tabela.setItem(l, c, QTableWidgetItem(str(self.dados[l][c])))
+                        self.name_table.setItem(l, c, QTableWidgetItem(str(self.data[l][c])))
 
             ######## MATERIAS #########
             if self.comboBox.currentText() == 'Materias':
                 # chamamos o banco de dados e pedimos um SELECT
-                self.cursor = self.bd.cursor()
-                self.cursor.execute('SELECT * FROM Materia')
-                self.dados = self.cursor.fetchall()
+                self.cursor.execute('SELECT * FROM subjects')
+                self.data = self.cursor.fetchall()
 
                 # Duas listas para definir nomes na coluna e nas linhas
-                nomes = ['ID', 'NOME', 'PROFESSOR']
-                lista_vazia = []
-                for x in range(0, len(self.dados)):
-                    lista_vazia.append(' ')
+                name_colum = ['ID', 'NOME', 'PROFESSOR']
+                empty_list = []
+                for x in range(0, len(self.data)):
+                    empty_list.append(' ')
 
                 # Alteração nas colunas
-                self.nome_tabela.setRowCount(len(self.dados))
-                self.nome_tabela.setColumnWidth(1, 200)
-                self.nome_tabela.setColumnCount(3)
-                self.nome_tabela.setVerticalHeaderLabels(lista_vazia)
-                self.nome_tabela.setHorizontalHeaderLabels(nomes)
+                self.name_table.setRowCount(len(self.data))
+                self.name_table.setColumnWidth(1, 200)
+                self.name_table.setColumnCount(3)
+                self.name_table.setVerticalHeaderLabels(empty_list)
+                self.name_table.setHorizontalHeaderLabels(name_colum)
 
                 # Adicinamos Items na coluna
-                for l in range(0, len(self.dados)):
+                for l in range(0, len(self.data)):
                     for c in range(0, 3):
-                        self.nome_tabela.setItem(l, c, QTableWidgetItem(str(self.dados[l][c])))
+                        self.name_table.setItem(l, c, QTableWidgetItem(str(self.data[l][c])))
 
-    def atualiza_pessoa(self, tabela):
-        self.nome_tabela = tabela
-
-        self.seletor = self.textEdit.toPlainText()
-        try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
         except Exception as error:
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
+
+    def update_person(self, table):
+        self.name_table = table
+        self.selector = self.textEdit.toPlainText()
+
+        try:
             ######## SELECIONA UM ALUNO #########
             if self.comboBox.currentText() == 'Alunos' and self.comboBox_3 != '':
                 # chamamos o banco de dados e pedimos um SELECT
-                self.cursor = self.bd.cursor()
                 if self.comboBox_3.currentText() == "ID":
                     try:
-                        self.seletor_num = int(self.seletor)
+                        self.seletor_num = int(self.selector)
                     except:
                         QMessageBox.about(self.p2, "Aviso", "DIGITE APENAS NUMEROS")
                         self.textEdit.setText('')
                         return
                     else:
-                        self.cursor.execute('SELECT * FROM Aluno WHERE RA=?', (int(self.seletor),))
+                        self.cursor.execute('SELECT * FROM student WHERE RA=?', (int(self.selector),))
 
                 if self.comboBox_3.currentText() == "NOME":
-                    self.cursor.execute('SELECT * FROM Aluno WHERE nome=?', (self.seletor.upper(),))
-                self.dados = self.cursor.fetchall()
+                    self.cursor.execute('SELECT * FROM student WHERE name=?', (self.selector.upper(),))
+                self.data = self.cursor.fetchall()
                 print('ola')
                 try:
-                    if self.dados[0][0]:
-                        print(self.dados[0][0])
-                        print(self.dados[0][1])
+                    if self.data[0][0]:
+                        print(self.data[0][0])
+                        print(self.data[0][1])
 
                 except:
                     QMessageBox.about(self.p2, "AVISO", "ID NÃO ENCONTRADO")
@@ -597,41 +586,40 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 lista_vazia = []
 
                 # Alteração nas colunas
-                self.nome_tabela.setRowCount(len(self.dados))
-                self.nome_tabela.setColumnCount(6)
-                self.nome_tabela.setColumnWidth(0, 15)
-                self.nome_tabela.setColumnWidth(1, 150)
-                self.nome_tabela.setColumnWidth(3, 50)
-                self.nome_tabela.setVerticalHeaderLabels(lista_vazia)
-                self.nome_tabela.setHorizontalHeaderLabels(nomes)
+                self.name_table.setRowCount(len(self.data))
+                self.name_table.setColumnCount(6)
+                self.name_table.setColumnWidth(0, 15)
+                self.name_table.setColumnWidth(1, 150)
+                self.name_table.setColumnWidth(3, 50)
+                self.name_table.setVerticalHeaderLabels(lista_vazia)
+                self.name_table.setHorizontalHeaderLabels(nomes)
 
-                for l in range(0, len(self.dados)):
+                for l in range(0, len(self.data)):
                     for c in range(6):
-                        self.nome_tabela.setItem(l, c, QTableWidgetItem(str(self.dados[l][c])))
+                        self.name_table.setItem(l, c, QTableWidgetItem(str(self.data[l][c])))
                 self.textEdit.setText('')
 
             ######## SELECIONA UM PROFESSORE #########
             elif self.comboBox.currentText() == 'Professor':
                 # chamamos o banco de dados e pedimos um SELECT
-                self.cursor = self.bd.cursor()
                 if self.comboBox_3.currentText() == "ID":
                     try:
-                        self.seletor_num = int(self.seletor)
+                        self.seletor_num = int(self.selector)
                     except:
                         QMessageBox.about(self.p2, "Aviso", "DIGITE APENAS NUMEROS")
                         self.textEdit.setText('')
                         return
                     else:
-                        self.cursor.execute('SELECT * FROM Professor WHERE id=?', (int(self.seletor),))
+                        self.cursor.execute('SELECT * FROM teacher WHERE id=?', (int(self.selector),))
 
                 if self.comboBox_3.currentText() == "NOME":
-                    self.cursor.execute('SELECT * FROM Professor WHERE nome=?', (self.seletor.upper(),))
-                self.dados = self.cursor.fetchall()
+                    self.cursor.execute('SELECT * FROM teacher WHERE name=?', (self.selector.upper(),))
+                self.data = self.cursor.fetchall()
 
                 try:
-                    if self.dados[0][0]:
-                        print(self.dados[0][0])
-                        print(self.dados[0][1])
+                    if self.data[0][0]:
+                        print(self.data[0][0])
+                        print(self.data[0][1])
 
                 except:
                     QMessageBox.about(self.p2, "AVISO", "ID NÃO ENCONTRADO")
@@ -639,41 +627,41 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     return
                 nomes = ['ID', 'NOME', 'CPF', 'DATA NASC']
                 lista_vazia = []
-                for x in range(0, len(self.dados)):
+                for x in range(0, len(self.data)):
                     lista_vazia.append(' ')
 
-                self.nome_tabela.setRowCount(len(self.dados))
-                self.nome_tabela.setColumnCount(4)
-                self.nome_tabela.setColumnWidth(0, 15)
-                self.nome_tabela.setColumnWidth(1, 200)
-                self.nome_tabela.setColumnWidth(3, 115)
-                self.nome_tabela.setVerticalHeaderLabels(lista_vazia)
-                self.nome_tabela.setHorizontalHeaderLabels(nomes)
+                self.name_table.setRowCount(len(self.data))
+                self.name_table.setColumnCount(4)
+                self.name_table.setColumnWidth(0, 15)
+                self.name_table.setColumnWidth(1, 200)
+                self.name_table.setColumnWidth(3, 115)
+                self.name_table.setVerticalHeaderLabels(lista_vazia)
+                self.name_table.setHorizontalHeaderLabels(nomes)
 
-                for l in range(0, len(self.dados)):
+                for l in range(0, len(self.data)):
                     for c in range(0, 4):
-                        self.nome_tabela.setItem(l, c, QTableWidgetItem(str(self.dados[l][c])))
+                        self.name_table.setItem(l, c, QTableWidgetItem(str(self.data[l][c])))
 
-    ######## DELETAR CADASTROS #########
-    def deleta_registro(self):
-        ids = []
-        try:
-            self.bd = sqlite3.connect('banco_dados/edu.db')
         except Exception as error:
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
-        else:
+
+    ######## DELETAR CADASTROS #########
+    def delete_registry(self):
+        ids = []
+
+        try:
             if self.comboBox.currentText() == 'Aluno':
                 self.cursor = self.bd.cursor()
-                self.cursor.execute('SELECT RA FROM Aluno')
+                self.cursor.execute('SELECT RA FROM student')
                 self.dados_2 = self.cursor.fetchall()
                 for x in self.dados_2:
                     ids.append(x)
                 if ids == []:
                     try:
                         self.cursor_2 = self.bd.cursor()
-                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'Aluno'")
+                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'student'")
                         self.cursor_3 = self.bd.cursor()
-                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'Aluno' ")
+                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'student' ")
                         self.bd.commit()
                     except Exception as error_2:
                         print(f"Error: {error_2}")
@@ -692,16 +680,16 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     print('error')
                 else:
                     self.cursor = self.bd.cursor()
-                    acao = 'DELETE FROM Aluno WHERE RA=?'
+                    acao = 'DELETE FROM student WHERE RA=?'
                     self.cursor.execute(acao, (self.id_delete,))
                     self.bd.commit()
                     self.cursor.close()
-                    self.atualizar_banco(self.tabela_deletar)
+                    self.update_database(self.tabela_deletar)
                     self.lineEdit_8.setText('')
 
             if self.comboBox.currentText() == 'Professor':
                 self.cursor = self.bd.cursor()
-                self.cursor.execute('SELECT id FROM Professor')
+                self.cursor.execute('SELECT id FROM teacher')
                 self.dados_2 = self.cursor.fetchall()
                 for x in self.dados_2:
                     ids.append(x)
@@ -709,9 +697,9 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     # SE TODOS OS DADOS FOREM APAGADOS, SEQ RETORNA PARA 0
                     try:
                         self.cursor_2 = self.bd.cursor()
-                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'Professor'")
+                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'teacher'")
                         self.cursor_3 = self.bd.cursor()
-                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'Professor' ")
+                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'teacher' ")
                         self.bd.commit()
                     except Exception as error_2:
                         print(f"Error: {error_2}")
@@ -731,13 +719,53 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     print('error')
                 else:
                     self.cursor = self.bd.cursor()
-                    acao = 'DELETE FROM Professor WHERE id=?'
+                    acao = 'DELETE FROM teacher WHERE id=?'
                     self.cursor.execute(acao, (self.id_delete,))
                     self.bd.commit()
                     self.cursor.close()
-                    self.atualizar_banco(self.tabela_deletar)
+                    self.update_database(self.tabela_deletar)
                     self.lineEdit_8.setText('')
 
+            if self.comboBox.currentText() == 'Materias':
+                self.cursor = self.bd.cursor()
+                self.cursor.execute('SELECT id FROM subjects')
+                self.dados_2 = self.cursor.fetchall()
+                for x in self.dados_2:
+                    ids.append(x)
+                if ids == []:
+                    try:
+                        self.cursor_2 = self.bd.cursor()
+                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'subjects'")
+                        self.cursor_3 = self.bd.cursor()
+                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'subjects' ")
+                        self.bd.commit()
+                    except Exception as error_2:
+                        print(f"Error: {error_2}")
+                try:
+                    self.id_delete = self.lineEdit_8.text()
+                    """SE ID FOR IGUAL A 0, RETORNA"""
+                    if self.id_delete == '':
+                        QtWidgets.QMessageBox.about(self.p_2_del, 'AVISO', 'INFORME O ID')
+                        return
+                    if self.id_delete not in str(ids):
+                        QtWidgets.QMessageBox.about(self.p_2_del, 'AVISO', 'ID NÃO ENCONTRADO')
+                        return
+                    else:
+                        QtWidgets.QMessageBox.about(self.p_2_del, 'DELETADO', 'DELETADO COM SUCCESO')
+                except:
+                    print('error')
+                else:
+                    self.cursor = self.bd.cursor()
+                    acao = 'DELETE FROM subjects WHERE id=?'
+                    self.cursor.execute(acao, (self.id_delete,))
+                    self.bd.commit()
+                    self.cursor.close()
+                    self.update_database(self.tabela_deletar)
+                    self.lineEdit_8.setText('')
+
+
+        except Exception as error:
+            print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
 
 if __name__ == '__main__':
     qt = QApplication(sys.argv)
