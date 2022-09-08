@@ -1106,6 +1106,25 @@ color: rgb(0, 24, 162);</string>
                        <string/>
                       </property>
                       <property name="placeholderText">
+                       <string>cpf</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item alignment="Qt::AlignHCenter">
+                     <widget class="QLineEdit" name="lineEdit_26">
+                      <property name="styleSheet">
+                       <string notr="true">QLineEdit {
+	width: 300px;
+	background-color: white;
+	color: rgb(0,10,10);
+	border-radius: 7px;  border: 2px solid  rgb(52, 76, 250);
+	padding: 7px
+}</string>
+                      </property>
+                      <property name="text">
+                       <string/>
+                      </property>
+                      <property name="placeholderText">
                        <string>celular</string>
                       </property>
                      </widget>
@@ -1192,10 +1211,10 @@ padding: 7px</string>
                      <number>7</number>
                     </property>
                     <property name="leftMargin">
-                     <number>150</number>
+                     <number>200</number>
                     </property>
                     <property name="rightMargin">
-                     <number>150</number>
+                     <number>200</number>
                     </property>
                     <item>
                      <widget class="QPushButton" name="pushButton_9">
