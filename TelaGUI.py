@@ -486,6 +486,17 @@ class Ui_MainWindow(object):
         self.lineEdit_7.setText("")
         self.lineEdit_7.setObjectName("lineEdit_7")
         self.verticalLayout_15.addWidget(self.lineEdit_7, 0, QtCore.Qt.AlignHCenter)
+        self.lineEdit_26 = QtWidgets.QLineEdit(self.frame_10)
+        self.lineEdit_26.setStyleSheet("QLineEdit {\n"
+"    width: 300px;\n"
+"    background-color: white;\n"
+"    color: rgb(0,10,10);\n"
+"    border-radius: 7px;  border: 2px solid  rgb(52, 76, 250);\n"
+"    padding: 7px\n"
+"}")
+        self.lineEdit_26.setText("")
+        self.lineEdit_26.setObjectName("lineEdit_26")
+        self.verticalLayout_15.addWidget(self.lineEdit_26, 0, QtCore.Qt.AlignHCenter)
         self.dateEdit_2 = QtWidgets.QDateEdit(self.frame_10)
         self.dateEdit_2.setStyleSheet("width: 200px;\n"
 "background-color: white;\n"
@@ -514,7 +525,7 @@ class Ui_MainWindow(object):
         self.frame_11.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_11.setObjectName("frame_11")
         self.verticalLayout_16 = QtWidgets.QVBoxLayout(self.frame_11)
-        self.verticalLayout_16.setContentsMargins(150, -1, 150, -1)
+        self.verticalLayout_16.setContentsMargins(200, -1, 200, -1)
         self.verticalLayout_16.setSpacing(7)
         self.verticalLayout_16.setObjectName("verticalLayout_16")
         self.pushButton_9 = QtWidgets.QPushButton(self.frame_11)
@@ -1554,7 +1565,8 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "GESTOR"))
         self.label_4.setText(_translate("MainWindow", "CADASTRAR PROFESSOR"))
         self.lineEdit_6.setPlaceholderText(_translate("MainWindow", "nome do professor"))
-        self.lineEdit_7.setPlaceholderText(_translate("MainWindow", "celular"))
+        self.lineEdit_7.setPlaceholderText(_translate("MainWindow", "cpf"))
+        self.lineEdit_26.setPlaceholderText(_translate("MainWindow", "celular"))
         self.pushButton_9.setText(_translate("MainWindow", "CADASTRAR"))
         self.pushButton_10.setText(_translate("MainWindow", "ALTERAR"))
         self.pushButton_16.setText(_translate("MainWindow", "VOLTAR"))
