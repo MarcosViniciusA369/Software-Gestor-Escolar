@@ -5,15 +5,32 @@ from PyQt5.QtCore import QTime, QTimer
 from PyQt5.QtWidgets import QMainWindow, QApplication, QTableWidget, QTableWidgetItem, QMessageBox, QShortcut
 from PyQt5.QtGui import QKeySequence
 from TelaGUI import *
-
+import bd_create
+import os
+from threading import *
+from time import sleep
 
 class App(QMainWindow, QTableWidget, Ui_MainWindow):
     def __init__(self, parent=None):
         super(App, self).__init__(parent)
         super().setupUi(self)
 
+        self.frame_31.hide()
+
+        '''try:
+            if os.path.exists("banco_dados/Pyedu_bd.db"):
+                print('yes')
+            else:
+                self.frame_31.show()
+                self.label_15.setText('BANCO NÃO ENCONTRADO, CRIADO UM NOVO....')
+        except:
+            print("error")
+        finally:'''
+
         self.bd = sqlite3.connect('banco_dados/Pyedu_bd.db')
         self.cursor = self.bd.cursor()
+        bd_create.create_all()
+
 
         timer = QTimer(self)
         timer.timeout.connect(self.clock)
@@ -60,7 +77,7 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         ######################### BOTOES DELETAR ###########################
         self.pushButton_17.clicked.connect(self.delete_registry)
         self.pushButton_19.clicked.connect(lambda: self.update_database(self.tabela_deletar))
-        self.pushButton_18.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+        self.pushButton_18.clicked.connect(self.btn18_dlt)
 
         ######################### COMBOX ###########################
         self.comboBox.addItems(['Alunos', 'Professor', 'Materias'])
@@ -110,7 +127,15 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                               data_atual.year)
         self.label_8.setText(str(h))
 
-        ######################### FUNCOES DOS BTNS ###########################
+    def thr(self):
+        t1 = Thread(target=self.pop_up)
+
+    def pop_up(self):
+        self.frame_31.show()
+        self.label_15.setText('BANCO NÃO ENCONTRADO, CRIADO UM NOVO....')
+        sleep(1)
+
+    ######################### FUNCOES DOS BTNS ###########################
 
     def btn_one_person(self):
         self.search_text = self.textEdit.toPlainText()
@@ -184,6 +209,10 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.update_database(self.tabela_geral)
         self.stackedWidget.setCurrentIndex(1)
 
+    def btn18_dlt(self):
+        self.update_database(self.tabela_geral)
+        self.stackedWidget.setCurrentIndex(1)
+
     def btn20_alt(self):
         self.lineEdit_14.setText('')
         self.stackedWidget.setCurrentIndex(1)
@@ -195,6 +224,7 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.lineEdit_11.hide()
         self.lineEdit_13.hide()
         self.dateEdit_3.hide()
+        self.update_database(self.tabela_geral)
 
     def btn21_alt(self):
         if self.lineEdit_14.text() == "":
@@ -648,20 +678,20 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
     ######## DELETAR CADASTROS #########
     def delete_registry(self):
         ids = []
-
         try:
-            if self.comboBox.currentText() == 'Aluno':
+            if self.comboBox.currentText() == 'Alunos':
                 self.cursor = self.bd.cursor()
                 self.cursor.execute('SELECT RA FROM student')
-                self.dados_2 = self.cursor.fetchall()
-                for x in self.dados_2:
+                self.dados = self.cursor.fetchall()
+                for x in self.dados:
                     ids.append(x)
+
                 if ids == []:
                     try:
-                        self.cursor_2 = self.bd.cursor()
-                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'student'")
-                        self.cursor_3 = self.bd.cursor()
-                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'student' ")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("SELECT seq FROM sqlite_sequence WHERE name = 'student'")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'student' ")
                         self.bd.commit()
                     except Exception as error_2:
                         print(f"Error: {error_2}")
@@ -690,16 +720,16 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             if self.comboBox.currentText() == 'Professor':
                 self.cursor = self.bd.cursor()
                 self.cursor.execute('SELECT id FROM teacher')
-                self.dados_2 = self.cursor.fetchall()
-                for x in self.dados_2:
+                self.dados = self.cursor.fetchall()
+                for x in self.dados:
                     ids.append(x)
                 if ids == []:
                     # SE TODOS OS DADOS FOREM APAGADOS, SEQ RETORNA PARA 0
                     try:
-                        self.cursor_2 = self.bd.cursor()
-                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'teacher'")
-                        self.cursor_3 = self.bd.cursor()
-                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'teacher' ")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("SELECT seq FROM sqlite_sequence WHERE name = 'teacher'")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'teacher' ")
                         self.bd.commit()
                     except Exception as error_2:
                         print(f"Error: {error_2}")
@@ -718,26 +748,24 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 except:
                     print('error')
                 else:
-                    self.cursor = self.bd.cursor()
                     acao = 'DELETE FROM teacher WHERE id=?'
                     self.cursor.execute(acao, (self.id_delete,))
                     self.bd.commit()
-                    self.cursor.close()
                     self.update_database(self.tabela_deletar)
                     self.lineEdit_8.setText('')
 
             if self.comboBox.currentText() == 'Materias':
                 self.cursor = self.bd.cursor()
                 self.cursor.execute('SELECT id FROM subjects')
-                self.dados_2 = self.cursor.fetchall()
-                for x in self.dados_2:
+                self.dados = self.cursor.fetchall()
+                for x in self.dados:
                     ids.append(x)
                 if ids == []:
                     try:
-                        self.cursor_2 = self.bd.cursor()
-                        self.cursor_2.execute("SELECT seq FROM sqlite_sequence WHERE name = 'subjects'")
-                        self.cursor_3 = self.bd.cursor()
-                        self.cursor_3.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'subjects' ")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("SELECT seq FROM sqlite_sequence WHERE name = 'subjects'")
+                        self.cursor = self.bd.cursor()
+                        self.cursor.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name = 'subjects' ")
                         self.bd.commit()
                     except Exception as error_2:
                         print(f"Error: {error_2}")
@@ -759,7 +787,6 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                     acao = 'DELETE FROM subjects WHERE id=?'
                     self.cursor.execute(acao, (self.id_delete,))
                     self.bd.commit()
-                    self.cursor.close()
                     self.update_database(self.tabela_deletar)
                     self.lineEdit_8.setText('')
 
