@@ -11,6 +11,7 @@ def create_student():
 	"cpf" TEXT NOT NULL,
 	"phone_number" TEXT,
 	"birth_date" DATE,
+	"year" INTEGER,
 	PRIMARY KEY("RA" AUTOINCREMENT)
 );""")
     cursor.execute(new_table)
@@ -22,7 +23,8 @@ def create_teacher():
     	"name"	TEXT NOT NULL,
     	"cpf" TEXT NOT NULL,
     	"phone_number" TEXT,
-    	"birth_date" DATE
+    	"birth_date" DATE,
+    	PRIMARY KEY("id" AUTOINCREMENT)
     );""")
     cursor.execute(new_table)
     conn.commit()
@@ -32,6 +34,7 @@ def create_subjects():
     	id INTEGER NOT NULL,
     	"name"	TEXT NOT NULL,
     	id_teacher INTEGER,
+    	PRIMARY KEY("id" AUTOINCREMENT),
     	FOREIGN KEY("id_teacher") REFERENCES "teacher"("id")
     );""")
     cursor.execute(new_table)
@@ -52,17 +55,20 @@ def create_grades():
     new_table = ("""CREATE TABLE IF NOT EXISTS grades(
 	    "id" INTEGER NOT NULL,
 	    "id_student" INTEGER NOT NULL,
+	    "id_subj" INTEGER,
 	    "id_class" INTEGER,
 	    "g1" REAL,
 	    "g2" REAL,
 	    "g3" REAL,
+	    PRIMARY KEY("id" AUTOINCREMENT),
 	    FOREIGN KEY("id_class") REFERENCES "class"("id"),
 	    FOREIGN KEY("id_student") REFERENCES "student"("RA")
     );""")
     cursor.execute(new_table)
     conn.commit()
-
-'''create_student()
-create_teacher()
-create_subjects()
-create_grades()'''
+def create_all():
+    create_student()
+    create_teacher()
+    create_subjects()
+    create_grades()
+    create_class()
