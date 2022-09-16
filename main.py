@@ -62,7 +62,7 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         ######################### BOTOES PARA CADASTRAR ALUNO ###########################
         self.pushButton_7.clicked.connect(self.register_student)
         self.pushButton_15.clicked.connect(self.btn15_reg)
-        self.pushButton_16.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+        self.pushButton_16.clicked.connect(self.btn16_cad)
 
         ######################### BUTTON FOR ALTERAR ###########################
         self.pushButton_21.clicked.connect(self.btn21_alt)
@@ -135,6 +135,14 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.label_15.setText('BANCO NÃO ENCONTRADO, CRIADO UM NOVO....')
         sleep(1)
 
+    ######################### APAGANDO AREAS ###########################
+    def hide_cad_teacher(self):
+        self.lineEdit_9.setText('')
+        self.lineEdit_11.setText('')
+        self.lineEdit_13.setText('')
+        self.lineEdit_3.setText('')
+        self.lineEdit_10.setText('')
+        self.lineEdit_14.setText('')
     ######################### FUNCOES DOS BTNS ###########################
 
     def btn_one_person(self):
@@ -208,6 +216,11 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
     def btn15_reg(self):
         self.update_database(self.tabela_geral)
         self.stackedWidget.setCurrentIndex(1)
+
+    def btn16_cad(self):
+        self.update_database(self.tabela_geral)
+        self.stackedWidget.setCurrentIndex(1)
+        self.hide_cad_teacher()
 
     def btn18_dlt(self):
         self.update_database(self.tabela_geral)
@@ -487,12 +500,7 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         except Exception as error:
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
         else:
-            self.lineEdit_9.setText('')
-            self.lineEdit_11.setText('')
-            self.lineEdit_13.setText('')
-            self.lineEdit_3.setText('')
-            self.lineEdit_10.setText('')
-            self.lineEdit_14.setText('')
+            self.hide_cad_teacher()
 
             self.update_database(self.tabela_alterar)
 
