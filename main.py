@@ -71,8 +71,9 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
 
         ######################### BOTOES MATERIA ###########################
         self.pushButton_29.clicked.connect(self.reg_sub)
-        self.pushButton_31.clicked.connect(lambda :self.stackedWidget.setCurrentIndex(1))
+        self.pushButton_31.clicked.connect(self.back_home)
         self.pushButton_30.clicked.connect(self.alt_sub)
+        self.pushButton_32.clicked.connect(self.btn32_alt)
 
         ######################### BOTOES DELETAR ###########################
         self.pushButton_17.clicked.connect(self.delete_registry)
@@ -144,6 +145,9 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.lineEdit_10.setText('')
         self.lineEdit_14.setText('')
     ######################### FUNCOES DOS BTNS ###########################
+    def back_home(self):
+        self.stackedWidget.setCurrentIndex(1)
+        self.update_database(self.tabela_geral)
 
     def btn_one_person(self):
         self.search_text = self.textEdit.toPlainText()
@@ -177,9 +181,9 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             self.pushButton_9.show()
 
         elif self.comboBox.currentText() == 'Materias':
+            self.update_database(self.tabela_materia)
             self.pushButton_32.hide()
             self.pushButton_33.hide()
-
             self.stack = self.stackedWidget.setCurrentIndex(8)
             self.lineEdit_15.hide()
             self.lineEdit_24.show()
@@ -205,8 +209,8 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             self.lineEdit_24.hide()
             self.lineEdit_25.hide()
             self.pushButton_29.hide()
-            self.pushButton_30.show()
-            self.pushButton_32.hide()
+            self.pushButton_30.hide()
+            self.pushButton_32.show()
             self.pushButton_33.hide()
 
     def btn6_dlt(self):
@@ -319,6 +323,34 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.dateEdit_3.hide()
         self.pushButton_22.hide()
         self.pushButton_21.show()
+
+    def btn32_alt(self):
+        self.id_sub = self.lineEdit_15.text()
+
+        ids = []
+        self.cursor.execute("SELECT id FROM subjects")
+        self.dados = self.cursor.fetchall()
+        for x in self.dados:
+            ids.append(x)
+
+        if self.id_sub == '':
+            QtWidgets.QMessageBox.about(self.p_2_alt, 'AVISO', 'INFORME O ID')
+            return
+        if self.id_sub not in str(ids):
+            QtWidgets.QMessageBox.about(self.p_2_alt, 'AVISO', 'ID NÃO ENCONTRADO')
+            return
+
+        self.cursor.execute('SELECT * FROM subjects WHERE id=?', (self.id_sub, ))
+        self.dados = self.cursor.fetchall()
+
+        for i in self.dados:
+            self.lineEdit_24.setText(f'{i[1]}')
+            self.lineEdit_25.setText(f'{i[2]}')
+
+        self.pushButton_32.hide()
+        self.pushButton_30.show()
+        self.lineEdit_24.show()
+        self.lineEdit_25.show()
 
     def close_app(self):
         sys.exit()
@@ -467,9 +499,22 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             QtWidgets.QMessageBox.about(self.p_2_cad, 'CADASTRADO', 'CADASTRADO COM SUCESSO')
         except Exception as error:
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
+        else:
+            self.update_database(self.tabela_materia)
+            self.lineEdit_15.setText('')
+            self.lineEdit_24.setText('')
+            self.lineEdit_25.setText('')
 
     def alt_sub(self):
-        pass
+        self.id_sub = self.lineEdit_15.text()
+        self.sub = self.lineEdit_24.text()
+        self.id_prof = self.lineEdit_25.text()
+
+        if self.id_sub == "":
+            QtWidgets.QMessageBox.about(self.p_2_alt, "AVISO", "INSIRA ID")
+
+        self.cursor.execute("UPDATE subjects SET name = ?, id_teacher = ? WHERE id = ?", (self.sub, self.id_prof, self.id_sub,))
+        self.bd.commit()
 
     ######## ALTERAR BANCO #########
     def alter_register(self):
@@ -481,7 +526,6 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
 
         try:
             if self.comboBox.currentText() == 'Alunos':
-                self.cursor = self.bd.cursor()
                 act = 'UPDATE student SET name = ?, name_resp = ?, cpf = ?, phone_number = ?, birth_date = ? WHERE RA = ?'
                 self.cursor.execute(act, (
                     self.name.upper(), self.resp.upper(), self.cpf, self.phone, self.date, self.lineEdit_14.text()))
@@ -501,7 +545,6 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
         else:
             self.hide_cad_teacher()
-
             self.update_database(self.tabela_alterar)
 
     ######## ATUALIZAR BANCO #########
@@ -688,7 +731,6 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         ids = []
         try:
             if self.comboBox.currentText() == 'Alunos':
-                self.cursor = self.bd.cursor()
                 self.cursor.execute('SELECT RA FROM student')
                 self.dados = self.cursor.fetchall()
                 for x in self.dados:
