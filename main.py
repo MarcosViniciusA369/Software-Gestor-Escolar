@@ -510,11 +510,23 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
         self.sub = self.lineEdit_24.text()
         self.id_prof = self.lineEdit_25.text()
 
-        if self.id_sub == "":
-            QtWidgets.QMessageBox.about(self.p_2_alt, "AVISO", "INSIRA ID")
+        try:
+            if self.id_sub == "":
+                QtWidgets.QMessageBox.about(self.p_2_alt, "AVISO", "INSIRA ID")
 
-        self.cursor.execute("UPDATE subjects SET name = ?, id_teacher = ? WHERE id = ?", (self.sub, self.id_prof, self.id_sub,))
-        self.bd.commit()
+            self.cursor.execute("UPDATE subjects SET name = ?, id_teacher = ? WHERE id = ?", (self.sub, self.id_prof, self.id_sub,))
+            self.bd.commit()
+            QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
+        except Exception as error:
+            print(error)
+        else:
+            self.update_database(self.tabela_materia)
+            self.pushButton_30.hide()
+            self.pushButton_32.show()
+            self.lineEdit_15.setText('')
+            self.lineEdit_24.hide()
+            self.lineEdit_25.hide()
+
 
     ######## ALTERAR BANCO #########
     def alter_register(self):
@@ -530,8 +542,6 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 self.cursor.execute(act, (
                     self.name.upper(), self.resp.upper(), self.cpf, self.phone, self.date, self.lineEdit_14.text()))
                 self.bd.commit()
-                QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
-
             if self.comboBox.currentText() == 'Professor':
                 self.lineEdit_11.hide()
 
@@ -540,10 +550,10 @@ class App(QMainWindow, QTableWidget, Ui_MainWindow):
                 self.cursor.execute(act, (
                     self.name.upper(), self.cpf, self.phone, self.date, self.lineEdit_14.text()))
                 self.bd.commit()
-                QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
         except Exception as error:
             print(f'OCORREU UM ERRO NO BANCO DE DADOS: {error}')
         else:
+            QtWidgets.QMessageBox.about(self.p_2_cad, 'ALTERADO', 'ALTERADO COM SUCESSO')
             self.hide_cad_teacher()
             self.update_database(self.tabela_alterar)
 
